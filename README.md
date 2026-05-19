@@ -1,72 +1,86 @@
 # AI Harness Studio
 
-A local Python + desktop-style frontend for chatting with DeepSeek. The browser talks to the FastAPI server, and the DeepSeek API key stays out of browser JavaScript.
+A local Python + desktop-style frontend for chatting with DeepSeek and other providers. The browser talks to the FastAPI server; server-side provider keys are stored locally (not in browser JS) or can be saved from the Settings UI.
+
+## Highlights (recent)
+
+- Fixed chat pane scrolling and visible scrollbars for better navigation.
+- Reworked right-side workspace tabs to icon-only tabs with hover labels and improved layout.
+- Added provider API key entry in Settings: keys are persisted on the Python server (`.local_provider_keys.json`) and used immediately.
+- Conversations (chat history) are saved in the browser and can be moved to an Artifact (Project) or deleted.
+- Conversation persistence across sessions and selective conversation switching.
 
 ## Features
 
 - Three-pane desktop interface with conversations, chat, and workspace controls.
-- DeepSeek model switcher for `deepseek-v4-flash` and `deepseek-v4-pro`.
-- Tool toggles that add local context to the model, including server time and project context.
-- MCP server manager UI for adding, enabling, disabling, and removing server definitions.
-- Functional integration panel for local files, GitHub, browser workflows, Google Analytics, Google Search Console, Google Ads, Google Sheets, CRM/leads, email campaigns, and team notes.
-- Integration actions can enable a connector, prepare export analysis, start a coordinated agent workflow, or create a recurring review routine.
-- Local chat persistence in browser storage and one-click transcript export.
-- Per-request token usage, estimated request cost, and running session token totals.
-- DeepSeek account balance display through `/user/balance`.
-- Session spend limit control in Settings.
-- Artifact studio for documents, code, standalone HTML, Markdown, JSON, tables, Mermaid diagrams, prompts, plans, and structured data.
-- Artifact preview, copy, download, delete, and local persistence.
-- Automatic artifact capture from fenced code blocks in chat replies.
-- Multi-provider support for DeepSeek, OpenAI, OpenRouter, Groq, Together AI, Mistral, xAI, and a custom OpenAI-compatible endpoint.
-- Agent harness panel with planner, researcher, builder, debugger, and critic modes.
-- Bounded harness runs with step budget, optional context, token/cost tracking, copy, and save-as-artifact.
-- Daily routine system for recurring AI workflows, with daily, weekday, and weekly schedules.
-- Routine run tracking with last/next run, due detection, pause/resume, run-due, and save-output-as-artifact.
-- Codex-style workspace UI with a left icon rail, icon-led tools/actions, and richer chat message cards.
-- Enhanced composer with file attachment context, slash commands, @ mentions, context chips, and chat/artifact/agent routing.
-- Cursor-like project panel with workspace file browsing, code search, file preview, attach-file-as-context, `/code`, `/fix`, `/explain`, and a Todo/Doing/Done task board.
-- Dedicated data analysis harness for messy text, logs, notes, CSV/JSON-like content, unstructured data, file uploads, profiling, cleaning plans, extraction, visualization ideas, and reports.
-- Truthfulness safeguards: grounded-only mode, uncertainty/assumptions, self-checking unsupported claims, and context citation guidance across chat, agents, artifacts, and data analysis.
-- More agentic harness behavior with evidence/assumption tracking, execution trace, self-check, verification, and next actions.
-- Ready-made coordinated agent stacks for Website Design, Website SEO, and Digital Marketing workflows.
+- Multi-provider support: DeepSeek, OpenAI, OpenRouter, Groq, Together AI, Mistral, xAI, and custom OpenAI-compatible endpoints.
+- Tool toggles (server time, project context, code helper) that add local context to prompts.
+- Artifact studio (documents, code, HTML, Markdown, JSON, tables, Mermaid diagrams, prompts, plans, data) with preview, copy, download, and save.
+- Agent harness (planner, researcher, builder, debugger, critic) with bounded runs, step budgets, and artifact outputs.
+- Data analysis panel for messy text, CSV/JSON, logs, and reports.
+- Composer enhancements: attachments, slash commands, mentions, and context chips.
+- Project browser: file search, preview, attach as context, and a small task board.
+- Truthfulness safeguards: grounded-only, uncertainty notes, self-check, and context citation guidance.
 
-## Run
+## Run (local)
+
+Create & activate a virtualenv, install dependencies, then start the server:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app:app --host 127.0.0.1 --port 8000
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1  # (PowerShell)
+pip install -r requirements.txt
+python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000.
+Open http://127.0.0.1:8000 in your browser.
 
-## Configure
+## Configure providers & API keys
 
-Settings live in `.env`:
+Primary configuration is in `.env`. Example values:
 
 ```env
 DEFAULT_AI_PROVIDER=deepseek
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
-
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=your_openai_model_here
 ```
 
-You can switch providers and models in Settings. For any provider, add its API key and model to `.env`, restart the server, then select it in the UI. Providers supported by the current OpenAI-compatible path include OpenAI, OpenRouter, Groq, Together AI, Mistral, xAI, and custom endpoints.
+Alternatively, use the Settings panel in the app to save a provider API key. Enter the key for the selected provider and click "Save key" — the key is stored locally on the Python server in `.local_provider_keys.json` and the provider will be marked as configured.
 
-## Usage and balance
+Security note: Do not commit real API keys to the repository. The app saves keys locally to the project folder; if you share the project, remove `.local_provider_keys.json` first.
 
-The top usage strip shows the last request tokens, estimated request cost, session token total, session estimated cost, and current DeepSeek balance. Cost estimates use DeepSeek's public per-1M-token pricing and the token usage returned by the chat completion response.
+## Conversations & History
 
-## Routines
+- Conversations are listed in the left rail. Each conversation has actions: Move (save as an Artifact) and Delete.
+- Creating a new chat starts a fresh conversation; switching restores history.
+- Conversations persist in browser localStorage; for longer-term storage, use the Artifact export or wire a server-side storage layer.
 
-Routines are stored in browser local storage and run while the app is open. Use the Routines tab to create daily, weekday, or weekly AI workflows. Each routine runs through the agent harness and can save its output as an artifact. A future server scheduler can reuse the same routine shape for true background execution.
+## Git & Deployment
 
-## Integrations
+This repository has been initialized and pushed to a remote if you provided one. To push locally yourself:
 
-Google Analytics, Google Search Console, Google Ads, Sheets, CRM, email, and notes integrations currently work through pasted or uploaded exports. Each integration includes a tailored data-analysis prompt, an agent workflow starter, and a one-click routine template. Real OAuth/API sync can be added next on the same provider shape.
+```powershell
+git remote add origin https://github.com/your/repo.git
+git push -u origin master:main
+```
 
-## MCP notes
+After verifying the remote on GitHub, consider enabling branch protection and storing any CI/CD secrets as repository secrets.
 
-The MCP panel stores server definitions in browser local storage for now. It is ready for the next step: launching those MCP server commands from Python and routing tool calls into DeepSeek conversations.
+## Troubleshooting
+
+- If a provider shows "needs key", either add the API key to `.env` and restart the server or save the key via Settings.
+- If the chat pane does not scroll, hard-refresh the browser to pick up CSS changes.
+- For long or truncated file previews, open the file directly in your editor or increase the preview limit in `app.py`.
+
+## Next steps (planned)
+
+- Implement structured, feature-rich assistant responses (cards, actions, citations, code blocks, collapsible summaries).
+- Server-side conversation persistence optional (SQLite-backed) and export/import workflows.
+- Add OAuth integrations for Google and GitHub and server-scheduled routines.
+
+---
+
+Maintainers: you (local project owner).
+
+
