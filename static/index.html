@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Harness Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <nav class="icon-rail" aria-label="Primary workspace navigation">
+        <button class="icon-nav active" type="button" data-icon="message" data-target="chat" aria-label="Chat"></button>
+        <button class="icon-nav" type="button" data-icon="tool" data-target="tools" aria-label="Tools"></button>
+        <button class="icon-nav" type="button" data-icon="agent" data-target="agents" aria-label="Agents"></button>
+        <button class="icon-nav" type="button" data-icon="calendar" data-target="routines" aria-label="Routines"></button>
+        <button class="icon-nav" type="button" data-icon="artifact" data-target="artifacts" aria-label="Artifacts"></button>
+        <button class="icon-nav" type="button" data-icon="data" data-target="data" aria-label="Data"></button>
+        <button class="icon-nav" type="button" data-icon="folder" data-target="project" aria-label="Project"></button>
+        <button class="icon-nav" type="button" data-icon="plug" data-target="integrations" aria-label="Integrations"></button>
+        <button class="icon-nav bottom" type="button" data-icon="settings" data-target="settings" aria-label="Settings"></button>
+      </nav>
+
+      <aside class="rail" aria-label="Conversations">
+        <div class="brand">
+          <div class="mark">DS</div>
+          <div>
+            <h1>AI Harness Studio</h1>
+            <p id="status">Checking connection...</p>
+          </div>
+        </div>
+
+        <button id="new-chat" class="primary-action" type="button" data-icon="plus">New chat</button>
+
+        <nav class="conversation-list" aria-label="Saved chats">
+          <button class="conversation active" type="button" data-icon="message">
+            <span>Local workspace</span>
+            <small>Chat, tools, agents</small>
+          </button>
+          <button class="conversation" type="button" data-icon="code">
+            <span>Code planning</span>
+            <small>Tools enabled</small>
+          </button>
+          <button class="conversation" type="button" data-icon="agent">
+            <span>Harness runs</span>
+            <small>Plans and execution</small>
+          </button>
+        </nav>
+
+        <div class="rail-footer">
+          <span class="dot"></span>
+          <span>Key stored on Python server</span>
+        </div>
+      </aside>
+
+      <section class="chat-pane" aria-label="Chat">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h2>Provider-powered assistant</h2>
+          </div>
+          <div class="header-actions">
+            <button id="clear" class="ghost" type="button" data-icon="trash">Clear</button>
+            <button id="export-chat" class="ghost" type="button" data-icon="copy">Export</button>
+          </div>
+        </header>
+
+        <section class="usage-strip" aria-label="Token and cost summary">
+          <div>
+            <span>Last request</span>
+            <strong id="last-request-tokens">0 tokens</strong>
+            <small id="last-request-cost">$0.000000</small>
+          </div>
+          <div>
+            <span>Session tokens</span>
+            <strong id="session-tokens">0</strong>
+            <small id="session-cost">$0.000000 estimated</small>
+          </div>
+          <div>
+            <span>Balance</span>
+            <strong id="balance-total">Checking...</strong>
+            <small id="balance-state">DeepSeek account</small>
+          </div>
+          <button id="refresh-balance" class="ghost small" type="button" data-icon="refresh">Refresh</button>
+        </section>
+
+        <div id="messages" class="messages" aria-live="polite"></div>
+
+        <form id="chat-form" class="composer">
+          <div id="active-tools" class="active-tools"></div>
+          <div id="context-chips" class="context-chips"></div>
+          <div class="composer-box">
+            <textarea
+              id="prompt"
+              rows="1"
+              placeholder="Message, use /commands, @mentions, or attach files..."
+              autocomplete="off"
+              required
+            ></textarea>
+            <div class="composer-toolbar">
+              <div class="composer-actions">
+                <label class="icon-button" title="Attach files">
+                  <input id="file-input" type="file" multiple />
+                  <span data-icon="plus">Files</span>
+                </label>
+                <button id="slash-button" class="ghost small" type="button" data-icon="terminal">Commands</button>
+                <button id="mention-button" class="ghost small" type="button" data-icon="plug">Mentions</button>
+                <select id="composer-mode" aria-label="Composer mode">
+                  <option value="chat">Chat</option>
+                  <option value="artifact">Artifact</option>
+                  <option value="agent">Agent</option>
+                  <option value="code">Code</option>
+                  <option value="data">Data</option>
+                </select>
+              </div>
+              <button id="send" type="submit" data-icon="send">Send</button>
+            </div>
+          </div>
+          <div id="composer-menu" class="composer-menu"></div>
+        </form>
+      </section>
+
+      <aside class="workspace" aria-label="Tools and integrations">
+        <div class="tabs" role="tablist" aria-label="Workspace panels">
+          <button class="tab active" type="button" data-panel="tools" data-icon="tool" aria-label="Tools"><span class="tab-label">Tools</span></button>
+          <button class="tab" type="button" data-panel="agents" data-icon="agent" aria-label="Agents"><span class="tab-label">Agents</span></button>
+          <button class="tab" type="button" data-panel="routines" data-icon="calendar" aria-label="Routines"><span class="tab-label">Routines</span></button>
+          <button class="tab" type="button" data-panel="artifacts" data-icon="artifact" aria-label="Artifacts"><span class="tab-label">Artifacts</span></button>
+          <button class="tab" type="button" data-panel="data" data-icon="data" aria-label="Data"><span class="tab-label">Data</span></button>
+          <button class="tab" type="button" data-panel="project" data-icon="folder" aria-label="Project"><span class="tab-label">Project</span></button>
+          <button class="tab" type="button" data-panel="mcp" data-icon="terminal" aria-label="MCP"><span class="tab-label">MCP</span></button>
+          <button class="tab" type="button" data-panel="integrations" data-icon="plug" aria-label="Integrations"><span class="tab-label">Integrations</span></button>
+          <button class="tab" type="button" data-panel="settings" data-icon="settings" aria-label="Settings"><span class="tab-label">Settings</span></button>
+        </div>
+
+        <section class="panel active" id="panel-tools">
+          <div class="workspace-cards">
+            <article>
+              <span>Active provider</span>
+              <strong id="provider-card">Loading</strong>
+            </article>
+            <article>
+              <span>Artifacts</span>
+              <strong id="artifact-count">0</strong>
+            </article>
+            <article>
+              <span>Harness runs</span>
+              <strong id="agent-run-count">0</strong>
+            </article>
+            <article>
+              <span>Routines</span>
+              <strong id="routine-count">0</strong>
+            </article>
+            <article>
+              <span>Safeguards</span>
+              <strong id="guard-card">On</strong>
+            </article>
+          </div>
+          <div class="panel-heading">
+            <h3>Toolbox</h3>
+            <p>Enable tool context before sending a message.</p>
+          </div>
+          <div id="tool-list" class="stack"></div>
+        </section>
+
+        <section class="panel" id="panel-agents">
+          <div class="panel-heading">
+            <h3>Agent harness</h3>
+            <p>Run bounded agent workflows with a role, step budget, context, checkpoints, and a reusable output.</p>
+          </div>
+          <div class="agent-stack-grid">
+            <button class="agent-stack-card" type="button" data-stack="website-design" data-icon="artifact">
+              <strong>Website Design</strong>
+              <span>Strategy, UX, visual system, frontend plan, QA</span>
+            </button>
+            <button class="agent-stack-card" type="button" data-stack="website-seo" data-icon="globe">
+              <strong>Website SEO</strong>
+              <span>SEO audit, keyword map, metadata, content, KPIs</span>
+            </button>
+            <button class="agent-stack-card" type="button" data-stack="digital-marketing" data-icon="spark">
+              <strong>Digital Marketing</strong>
+              <span>Funnel, campaigns, ads, lifecycle, analytics</span>
+            </button>
+          </div>
+          <form id="agent-form" class="mini-form">
+            <label class="field">
+              <span>Agent stack</span>
+              <select id="agent-stack">
+                <option value="">Single harness agent</option>
+                <option value="website-design">Website Design Stack</option>
+                <option value="website-seo">Website SEO Stack</option>
+                <option value="digital-marketing">Digital Marketing Stack</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Harness mode</span>
+              <select id="agent-mode">
+                <option value="planner">Planner</option>
+                <option value="researcher">Researcher</option>
+                <option value="builder">Builder</option>
+                <option value="debugger">Debugger</option>
+                <option value="critic">Critic</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Step budget <b id="agent-step-value">5</b></span>
+              <input id="agent-steps" type="range" min="1" max="8" step="1" value="5" />
+            </label>
+            <textarea id="agent-goal" rows="4" placeholder="Describe the outcome this agent should produce..." required></textarea>
+            <textarea id="agent-context" rows="3" placeholder="Optional context, constraints, files, notes, or previous decisions..."></textarea>
+            <button id="run-agent" type="submit" data-icon="play">Run harness</button>
+          </form>
+          <div class="agent-actions">
+            <button id="save-agent-artifact" class="ghost small" type="button" data-icon="artifact">Save as artifact</button>
+            <button id="copy-agent-result" class="ghost small" type="button" data-icon="copy">Copy result</button>
+          </div>
+          <div id="agent-runs" class="agent-runs"></div>
+          <article class="artifact-preview agent-preview">
+            <header>
+              <div>
+                <h4 id="agent-preview-title">No harness run yet</h4>
+                <p id="agent-preview-meta">Run a harness to generate a managed agent output.</p>
+              </div>
+            </header>
+            <pre id="agent-result"></pre>
+          </article>
+        </section>
+
+        <section class="panel" id="panel-routines">
+          <div class="panel-heading">
+            <h3>Daily routines</h3>
+            <p>Create recurring AI workflows for planning, summaries, reviews, reports, and personal operating loops.</p>
+          </div>
+          <form id="routine-form" class="mini-form">
+            <input id="routine-name" type="text" placeholder="Routine name, e.g. Morning plan" required />
+            <label class="field">
+              <span>Schedule</span>
+              <select id="routine-schedule">
+                <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Time</span>
+              <input id="routine-time" type="time" value="09:00" required />
+            </label>
+            <label class="field" id="routine-day-field">
+              <span>Weekly day</span>
+              <select id="routine-day">
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+                <option value="0">Sunday</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Harness mode</span>
+              <select id="routine-mode">
+                <option value="planner">Planner</option>
+                <option value="researcher">Researcher</option>
+                <option value="builder">Builder</option>
+                <option value="debugger">Debugger</option>
+                <option value="critic">Critic</option>
+              </select>
+            </label>
+            <textarea id="routine-prompt" rows="4" placeholder="Prompt to run on schedule..." required></textarea>
+            <label class="check-row">
+              <input id="routine-artifact" type="checkbox" checked />
+              <span>Save each run as an artifact</span>
+            </label>
+            <button id="add-routine" type="submit" data-icon="plus">Add routine</button>
+          </form>
+          <div class="routine-toolbar">
+            <button id="run-due-routines" class="ghost small" type="button" data-icon="play">Run due</button>
+            <button id="pause-routines" class="ghost small" type="button" data-icon="pause">Pause all</button>
+          </div>
+          <div id="routine-list" class="routine-list"></div>
+        </section>
+
+        <section class="panel" id="panel-artifacts">
+          <div class="panel-heading">
+            <h3>Artifacts</h3>
+            <p>Create standalone outputs: docs, code, HTML, JSON, diagrams, plans, prompts, tables, and data.</p>
+          </div>
+          <form id="artifact-form" class="mini-form">
+            <label class="field">
+              <span>Artifact type</span>
+              <select id="artifact-type">
+                <option value="document">Document</option>
+                <option value="code">Code</option>
+                <option value="html">HTML app/page</option>
+                <option value="markdown">Markdown</option>
+                <option value="json">JSON</option>
+                <option value="table">Table</option>
+                <option value="diagram">Mermaid diagram</option>
+                <option value="prompt">Prompt</option>
+                <option value="plan">Plan</option>
+                <option value="data">Structured data</option>
+              </select>
+            </label>
+            <input id="artifact-title" type="text" placeholder="Title, optional" />
+            <textarea id="artifact-prompt" rows="4" placeholder="Describe what to create..." required></textarea>
+            <button id="create-artifact" type="submit" data-icon="spark">Create artifact</button>
+          </form>
+
+          <div class="artifact-actions">
+            <button id="copy-artifact" class="ghost small" type="button" data-icon="copy">Copy</button>
+            <button id="download-artifact" class="ghost small" type="button" data-icon="download">Download</button>
+            <button id="delete-artifact" class="danger small" type="button" data-icon="trash">Delete</button>
+          </div>
+
+          <div id="artifact-list" class="artifact-list"></div>
+          <article class="artifact-preview">
+            <header>
+              <div>
+                <h4 id="artifact-preview-title">No artifact selected</h4>
+                <p id="artifact-preview-meta">Create or select an artifact.</p>
+              </div>
+            </header>
+            <iframe id="artifact-html-preview" title="HTML artifact preview" sandbox="allow-scripts"></iframe>
+            <pre id="artifact-preview-content"></pre>
+          </article>
+        </section>
+
+        <section class="panel" id="panel-data">
+          <div class="panel-heading">
+            <h3>Data analysis</h3>
+            <p>Analyze messy text, tables, logs, CSV, JSON, pasted notes, and unorganized raw data.</p>
+          </div>
+          <form id="data-form" class="mini-form">
+            <label class="field">
+              <span>Analysis type</span>
+              <select id="data-analysis-type">
+                <option value="insights">Insights</option>
+                <option value="profile">Profile structure</option>
+                <option value="clean">Cleaning plan</option>
+                <option value="extract">Extract entities</option>
+                <option value="visualize">Visualization ideas</option>
+                <option value="report">Full report</option>
+              </select>
+            </label>
+            <textarea id="data-question" rows="2" placeholder="Question or goal for the analysis...">Analyze this data and extract useful insights.</textarea>
+            <textarea id="data-input" rows="8" placeholder="Paste any structured, semi-structured, or messy raw data here..." required></textarea>
+            <label class="icon-button data-upload">
+              <input id="data-file-input" type="file" multiple />
+              <span data-icon="plus">Load files into data</span>
+            </label>
+            <button id="run-data-analysis" type="submit" data-icon="data">Analyze data</button>
+          </form>
+          <div class="data-actions">
+            <button id="save-data-artifact" class="ghost small" type="button" data-icon="artifact">Save as artifact</button>
+            <button id="copy-data-result" class="ghost small" type="button" data-icon="copy">Copy result</button>
+          </div>
+          <article class="artifact-preview data-preview">
+            <header>
+              <div>
+                <h4 id="data-preview-title">No analysis yet</h4>
+                <p id="data-preview-meta">Run analysis to see profile, assumptions, findings, and next steps.</p>
+              </div>
+            </header>
+            <pre id="data-result"></pre>
+          </article>
+        </section>
+
+        <section class="panel" id="panel-project">
+          <div class="panel-heading">
+            <h3>Project</h3>
+            <p>Browse files, attach code context, search the workspace, and track implementation tasks.</p>
+          </div>
+          <div class="project-search">
+            <input id="project-search" type="search" placeholder="Search project files or code..." />
+            <button id="project-search-button" class="ghost small" type="button" data-icon="search">Search</button>
+          </div>
+          <div id="project-file-list" class="project-file-list"></div>
+          <article class="project-preview">
+            <header>
+              <div>
+                <h4 id="project-preview-title">No file selected</h4>
+                <p id="project-preview-meta">Select a file to preview and attach it to chat.</p>
+              </div>
+              <button id="attach-project-file" class="ghost small" type="button" data-icon="plus">Attach</button>
+            </header>
+            <pre id="project-preview-content"></pre>
+          </article>
+
+          <div class="panel-heading compact">
+            <h3>Project tasks</h3>
+            <p>Small built-in board for Cursor-style implementation planning.</p>
+          </div>
+          <form id="project-task-form" class="mini-form">
+            <input id="project-task-title" type="text" placeholder="Task title" required />
+            <select id="project-task-status">
+              <option value="todo">Todo</option>
+              <option value="doing">Doing</option>
+              <option value="done">Done</option>
+            </select>
+            <button type="submit" data-icon="plus">Add task</button>
+          </form>
+          <div id="project-task-board" class="task-board"></div>
+        </section>
+
+        <section class="panel" id="panel-mcp">
+          <div class="panel-heading">
+            <h3>MCP servers</h3>
+            <p>Add server definitions for your local desktop workflow.</p>
+          </div>
+          <form id="mcp-form" class="mini-form">
+            <input id="mcp-name" type="text" placeholder="Server name" required />
+            <input id="mcp-command" type="text" placeholder="Command, e.g. npx -y @modelcontextprotocol/server-filesystem" required />
+            <button type="submit" data-icon="plus">Add server</button>
+          </form>
+          <div id="mcp-list" class="stack"></div>
+        </section>
+
+        <section class="panel" id="panel-integrations">
+          <div class="panel-heading">
+            <h3>Integrations</h3>
+            <p>Enable workflow starters for exports, project context, analytics, SEO, and marketing systems.</p>
+          </div>
+          <p class="panel-note">Google integrations currently work through pasted or uploaded exports. Use the actions to route data into analysis, start an agent workflow, or create a recurring review.</p>
+          <div id="integration-list" class="stack"></div>
+        </section>
+
+        <section class="panel" id="panel-settings">
+          <div class="panel-heading">
+            <h3>Run settings</h3>
+            <p>Choose model behavior for this chat.</p>
+          </div>
+          <div class="balance-box">
+            <div>
+              <span id="balance-label">Available balance</span>
+              <strong id="settings-balance">Checking...</strong>
+            </div>
+            <p id="balance-details">Fetching DeepSeek balance.</p>
+          </div>
+          <label class="field">
+            <span>Session spend limit USD</span>
+            <input id="session-limit" type="number" min="0" step="0.01" value="1.00" />
+          </label>
+          <label class="field">
+            <span>AI platform</span>
+            <select id="provider"></select>
+          </label>
+          <label class="field">
+            <span>Provider API key</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="provider-api-key" type="password" placeholder="Enter API key for selected provider" />
+              <button id="save-provider-key" class="small" type="button">Save key</button>
+            </div>
+            <small class="hint">Keys are stored locally in the project and used by the Python server.</small>
+          </label>
+          <label class="field">
+            <span>Model</span>
+            <input id="model" list="model-options" type="text" placeholder="Model name from selected provider" />
+            <datalist id="model-options"></datalist>
+            <small id="provider-help">Configured providers are loaded from your Python .env file.</small>
+          </label>
+          <label class="field">
+            <span>Temperature <b id="temp-value">0.7</b></span>
+            <input id="temperature" type="range" min="0" max="2" step="0.1" value="0.7" />
+          </label>
+          <label class="field">
+            <span>System prompt</span>
+            <textarea id="system-prompt" rows="5">You are a helpful, concise assistant inside a local DeepSeek desktop workspace.</textarea>
+          </label>
+          <div class="panel-heading compact">
+            <h3>Safeguards</h3>
+            <p>Reduce hallucinations and make agent work auditable.</p>
+          </div>
+          <label class="check-row">
+            <input id="guard-grounded" type="checkbox" />
+            <span>Grounded-only answers when context is provided</span>
+          </label>
+          <label class="check-row">
+            <input id="guard-uncertainty" type="checkbox" checked />
+            <span>Show uncertainty and assumptions</span>
+          </label>
+          <label class="check-row">
+            <input id="guard-self-check" type="checkbox" checked />
+            <span>Self-check unsupported claims</span>
+          </label>
+          <label class="check-row">
+            <input id="guard-cite-context" type="checkbox" checked />
+            <span>Cite files, artifacts, and context labels</span>
+          </label>
+        </section>
+      </aside>
+    </main>
+
+    <template id="toggle-card-template">
+      <article class="toggle-card">
+        <div>
+          <h4></h4>
+          <p></p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" />
+          <span></span>
+        </label>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
